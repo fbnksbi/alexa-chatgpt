@@ -3,24 +3,34 @@ const axios = require("axios");
 
 async function askToGPT(prompt) {
   const response = await axios.post(
-    "https://api.openai.com/v1/engines/text-davinci-003/completions",
+    "https://api.openai.com/v1/responses",
     {
-      prompt,
-      max_tokens: 100,
-      n: 1,
+      model: "gpt-4o-mini",
+      input: prompt,
+      max_output_tokens: 150,
       temperature: 0.5,
-      stop: ".",
-      top_p: 1,
     },
     {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
     }
   );
 
-  return response.data.choices[0].text;
+  const output = response.data.output || [];
+  const outputText = output
+    .flatMap((item) => item.content || [])
+    .filter((content) => content.type === "output_text" && content.text)
+    .map((content) => content.text)
+    .join(" ")
+    .trim();
+
+  if (outputText) {
+    return outputText;
+  }
+
+  return response.data.choices?.[0]?.text || "";
 }
 
 function formatString(text) {

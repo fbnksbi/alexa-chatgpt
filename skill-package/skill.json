@@ -1,0 +1,29 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "pt-BR": {
+          "name": "ChatGPT",
+          "summary": "Converse com um assistente inteligente.",
+          "description": "Uma skill que responde perguntas usando um modelo avançado da OpenAI.",
+          "examplePhrases": [
+            "Alexa, abrir ChatGPT",
+            "Alexa, perguntar ao ChatGPT qual a capital da França",
+            "Alexa, pedir ao ChatGPT uma ideia de nome"
+          ]
+        }
+      },
+      "isAvailableWorldwide": true,
+      "testingInstructions": "Forneça uma chave de API da OpenAI na configuração da Lambda.",
+      "category": "KNOWLEDGE_AND_TRIVIA"
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "sourceDir": "./"
+        }
+      }
+    },
+    "manifestVersion": "1.0"
+  }
+}
