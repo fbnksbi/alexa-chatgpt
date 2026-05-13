@@ -1,37 +1,6 @@
 const Alexa = require("ask-sdk-core");
-const axios = require("axios");
+const { ask, getProvider } = require("./aiClient");
 
-async function askToGPT(prompt) {
-  const response = await axios.post(
-    "https://api.openai.com/v1/responses",
-    {
-      model: "gpt-4o-mini",
-      input: prompt,
-      max_output_tokens: 150,
-      temperature: 0.5,
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-    }
-  );
-
-  const output = response.data.output || [];
-  const outputText = output
-    .flatMap((item) => item.content || [])
-    .filter((content) => content.type === "output_text" && content.text)
-    .map((content) => content.text)
-    .join(" ")
-    .trim();
-
-  if (outputText) {
-    return outputText;
-  }
-
-  return response.data.choices?.[0]?.text || "";
-}
 
 function formatString(text) {
   return text.replace(/\n+/g, " ");
@@ -45,7 +14,7 @@ const LaunchRequestHandler = {
   },
   async handle(handlerInput) {
     const response =
-      'Seja bem vindo ao GPT-3. Você pode perguntar algo como "chat qual a capital da França?"';
+      'Bem-vindo ao ChatGPT. Você pode perguntar algo como "chat qual a capital da França?"';
 
     return handlerInput.responseBuilder.speak(response).getResponse();
   },
@@ -64,11 +33,24 @@ const HelloWorldIntentHandler = {
       "question"
     );
 
-    const responseFromGPT = await askToGPT(question);
+    try {
+      const responseFromGPT = await ask(question, {
+        sessionId: handlerInput.requestEnvelope.session?.sessionId,
+        locale: handlerInput.requestEnvelope.request?.locale,
+        userId: handlerInput.requestEnvelope.context?.System?.user?.userId,
+      });
+      const formattedResponse = formatString(responseFromGPT);
 
-    const formattedResponse = formatString(responseFromGPT);
+      return handlerInput.responseBuilder
+        .speak(formattedResponse || "Desculpe, estou sem resposta no momento.")
+        .getResponse();
+    } catch (error) {
+      console.error("AI provider request failed", error?.response?.data || error?.message || error);
 
-    return handlerInput.responseBuilder.speak(formattedResponse).getResponse();
+      return handlerInput.responseBuilder
+        .speak("Desculpe, não consegui responder agora. Tente novamente em instantes.")
+        .getResponse();
+    }
   },
 };
 
